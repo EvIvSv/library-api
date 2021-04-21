@@ -1,0 +1,175 @@
+openapi: 3.0.0
+info:
+  title: Library Api
+  version: '1.0'
+tags:
+  - name: authors
+    description: Действия с авторами
+  - name: books
+    description: Действия с призами
+  - name: comments
+    description: Действия с комментариями
+paths:
+  /authors:
+    get:
+      summary: Список авторов
+      tags:
+        - authors
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Account'
+
+  /prize:
+    post:
+      summary: Отправка приза в очередь на отправку
+      tags:
+        - prize
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              required:
+                - uid
+                - email
+                - phone
+                - name
+                - type
+              type: object
+              properties:
+                uid:
+                  type: string
+                  description: уникальный id для каждого приза
+                email:
+                  type: string
+                  description: e-mail участника для отправки
+                phone:
+                  type: string
+                  description: номер телефона участника
+                name:
+                  type: string
+                  description: имя участника
+                type:
+                  type: string
+                  description: slug выбранного приза для отправки
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Task'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  '/task/{taskUUID}':
+    get:
+      summary: Получение информации по задаче в очереди
+      tags:
+        - task
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: taskUUID
+          in: path
+          description: UUID задачи в очереди
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Task'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  responses:
+    UnprocessableEntity:
+      description: UnprocessableEntity
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Проверьте корректность полей
+              errors:
+                type: object
+                properties:
+                  field:
+                    type: array
+                    items:
+                      type: string
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Message'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Message'
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Message'
+  schemas:
+    Message:
+      type: object
+      properties:
+        message:
+          type: string
+    Account:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        createdAt:
+          type: string
+    Task:
+      type: object
+      properties:
+        uuid:
+          type: string
+        createdAt:
+          type: string
+        resolvedAt:
+          type: string
+        status:
+          type: string
